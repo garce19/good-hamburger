@@ -1,17 +1,19 @@
 {
   "name": "good-hamburger",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "description": "Backend API for Good Hamburger ordering system",
+  "main": "src/server.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "test": "jest --coverage"
   },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/garce19/good-hamburger.git"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": ["api", "express", "mysql", "docker"],
+  "author": "Germán Rojas",
   "license": "ISC",
   "type": "commonjs",
   "bugs": {
