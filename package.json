@@ -17,5 +17,11 @@
   "bugs": {
     "url": "https://github.com/garce19/good-hamburger/issues"
   },
-  "homepage": "https://github.com/garce19/good-hamburger#readme"
+  "homepage": "https://github.com/garce19/good-hamburger#readme",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mysql2": "^3.15.3"
+  }
 }
