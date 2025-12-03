@@ -1,0 +1,21 @@
+{
+  "name": "good-hamburger",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garce19/good-hamburger.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/garce19/good-hamburger/issues"
+  },
+  "homepage": "https://github.com/garce19/good-hamburger#readme"
+}
