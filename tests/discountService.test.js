@@ -1,4 +1,4 @@
-const { calculateDiscountPercentage, calculateTotal } = require('../services/discountService');
+const { calculateDiscountPercentage, calculateTotal } = require('../src/services/discountService');
 
 describe('Discount Service', () => {
     describe('calculateDiscountPercentage', () => {
