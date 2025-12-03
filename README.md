@@ -75,7 +75,7 @@ Once the containers are running, verify that the services are accessible:
 
 Test the API health:
 ```bash
-curl http://localhost:3000/api/menu
+curl http://localhost:3000/api/health
 ```
 
 ### 4. Stop the Containers
