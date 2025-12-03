@@ -39,44 +39,121 @@ The system applies automatic discounts based on item combinations:
 
 ### Prerequisites
 
-- Docker
+- Docker Desktop or Docker Engine
 - Docker Compose
+- Git
 
-### Installation
+## Running with Docker
 
-1. Clone the repository:
+### 1. Clone the Repository
+
 ```bash
 git clone <repository-url>
 cd good-hamburger
 ```
 
-2. Build and start the application:
+### 2. Build and Start the Containers
+
+Build the Docker images and start all services:
+
 ```bash
 docker-compose up --build
 ```
 
-The services will be available at:
-- API: `http://localhost:3000`
-- MySQL: `localhost:3306`
+This command will:
+- Build the API container image
+- Build the MySQL container with initialization script
+- Create and start both containers
+- Initialize the database with schema and seed data
 
-### Local Development (Without Docker)
+### 3. Verify the Services
 
-1. Install dependencies:
+Once the containers are running, verify that the services are accessible:
+
+- **API:** http://localhost:3000
+- **MySQL:** localhost:3306
+
+Test the API health:
+```bash
+curl http://localhost:3000/api/menu
+```
+
+### 4. Stop the Containers
+
+To stop the running containers:
+
+```bash
+docker-compose down
+```
+
+To stop and remove all data (including database):
+
+```bash
+docker-compose down -v
+```
+
+### 5. View Container Logs
+
+To view real-time logs from all services:
+
+```bash
+docker-compose logs -f
+```
+
+To view logs from a specific service:
+
+```bash
+docker-compose logs -f api
+docker-compose logs -f mysql
+```
+
+### 6. Rebuild After Code Changes
+
+When you make changes to the code, rebuild and restart:
+
+```bash
+docker-compose up -d --build api
+```
+
+## Local Development (Without Docker)
+
+If you prefer to run the application without Docker:
+
+### 1. Install Dependencies
+
 ```bash
 npm install
 ```
 
-2. Configure environment variables by creating a `.env` file based on `.env.example`
+### 2. Configure Environment Variables
 
-3. Ensure MySQL 8.0 is running locally and execute the initialization script:
+Create a `.env` file in the root directory:
+
+```env
+PORT=3000
+DB_HOST=localhost
+DB_PORT=3306
+DB_USER=root
+DB_PASSWORD=your_password
+DB_NAME=good_hamburger
+NODE_ENV=development
+```
+
+### 3. Set Up MySQL Database
+
+Ensure MySQL 8.0 is running locally and execute the initialization script:
+
 ```bash
 mysql -u root -p < init.sql
 ```
 
-4. Start the development server:
+### 4. Start the Development Server
+
 ```bash
 npm run dev
 ```
+
+The API will be available at http://localhost:3000
 
 ## API Reference
 
@@ -202,35 +279,107 @@ DELETE /api/orders/:id
 }
 ```
 
-## Testing
+## How to Test
 
-### Run Unit Tests
+### Unit Tests
+
+The project includes unit tests for the business logic layer.
+
+#### Run All Tests
+
 ```bash
 npm test
 ```
 
-### Generate Coverage Report
+#### Run Tests in Watch Mode
+
+For development, run tests in watch mode to automatically rerun on file changes:
+
+```bash
+npm test -- --watch
+```
+
+#### Generate Coverage Report
+
 ```bash
 npm test -- --coverage
 ```
 
-### Test Coverage
+This will generate a detailed coverage report showing:
+- Statement coverage
+- Branch coverage
+- Function coverage
+- Line coverage
 
-The test suite currently covers:
-- Discount calculation logic
-- Business rules validation
-- Total amount calculations
+Coverage reports are saved in the `coverage/` directory.
 
-### Example Manual Tests
+#### Current Test Coverage
 
-**Create order with maximum discount:**
+The test suite covers:
+- **Discount Service:** All discount calculation scenarios
+- **Business Rules:** Validation of discount rules for all item combinations
+- **Total Calculations:** Subtotal, discount amount, and final total calculations
+
+### Manual API Testing
+
+#### Using Docker Environment
+
+Ensure the Docker containers are running:
+
+```bash
+docker-compose up
+```
+
+#### Test Scenarios
+
+**1. Retrieve All Menu Items**
+
+```bash
+curl http://localhost:3000/api/menu
+```
+
+**2. Create Order with Maximum Discount (20%)**
+
 ```bash
 curl -X POST http://localhost:3000/api/orders \
   -H "Content-Type: application/json" \
   -d '{"sandwich_id": 1, "extras": ["fries", "soft_drink"]}'
 ```
 
-**Attempt to create order with duplicate extras:**
+Expected: 20% discount applied.
+
+**3. Create Order with Medium Discount (15%)**
+
+```bash
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"sandwich_id": 2, "extras": ["soft_drink"]}'
+```
+
+Expected: 15% discount applied.
+
+**4. Create Order with Low Discount (10%)**
+
+```bash
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"sandwich_id": 3, "extras": ["fries"]}'
+```
+
+Expected: 10% discount applied.
+
+**5. Create Order without Extras (0% discount)**
+
+```bash
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"sandwich_id": 1, "extras": []}'
+```
+
+Expected: No discount applied.
+
+**6. Test Validation - Duplicate Extras**
+
 ```bash
 curl -X POST http://localhost:3000/api/orders \
   -H "Content-Type: application/json" \
@@ -244,6 +393,51 @@ Expected response:
   "error": "Duplicate extras are not allowed. Each extra can be added only once."
 }
 ```
+
+**7. Test Validation - Missing Sandwich**
+
+```bash
+curl -X POST http://localhost:3000/api/orders \
+  -H "Content-Type: application/json" \
+  -d '{"extras": ["fries"]}'
+```
+
+Expected response:
+```json
+{
+  "success": false,
+  "error": "A sandwich must be selected to create an order."
+}
+```
+
+**8. Retrieve All Orders**
+
+```bash
+curl http://localhost:3000/api/orders
+```
+
+**9. Update an Order**
+
+```bash
+curl -X PUT http://localhost:3000/api/orders/1 \
+  -H "Content-Type: application/json" \
+  -d '{"sandwich_id": 2, "extras": ["soft_drink"]}'
+```
+
+**10. Delete an Order**
+
+```bash
+curl -X DELETE http://localhost:3000/api/orders/1
+```
+
+### Testing with Postman or Insomnia
+
+You can also import these endpoints into Postman or Insomnia:
+
+1. Create a new collection
+2. Add the base URL: `http://localhost:3000`
+3. Create requests for each endpoint listed in the API Reference section
+4. Test different scenarios and edge cases
 
 ## Project Structure
 ```
