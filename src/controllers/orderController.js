@@ -3,9 +3,12 @@ const { calculateDiscountPercentage, calculateTotal } = require('../services/dis
 
 const createOrder = async (req, res, next) => {
     try {
-        const { sandwichId, extras } = req.body;
+        console.log('Request Body:', req.body);
+        console.log('Sandwich ID:', req.body.sandwich_id);
+        console.log('Extras:', req.body.extras);
+        const { sandwich_id, extras } = req.body;
 
-        if (!sandwichId) {
+        if (!sandwich_id) {
             return res.status(400).json({
                 success: false,
                 error: 'A sandwich must be selected to create an order.'
@@ -14,7 +17,7 @@ const createOrder = async (req, res, next) => {
 
         const [sandwiches] = await db.query(
             'SELECT * FROM menu_items WHERE id = ? AND type = "sandwich"',
-            [sandwichId]
+            [sandwich_id]
         );
 
         if (sandwiches.length === 0) {
@@ -34,20 +37,32 @@ const createOrder = async (req, res, next) => {
             });
         }
 
-        let subtotal = sandwiches[0].price;
+        let subtotal = parseFloat(sandwiches[0].price);
 
         if (hasFries) {
             const [friestItem] = await db.query(
                 "SELECT price FROM menu_items WHERE name = 'Fries'"
             );
-            subtotal += friestItem[0].price;
+            if (friestItem.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Fries not found in menu items.'
+                });
+            }
+            subtotal += parseFloat(friestItem[0].price);
         }
 
         if (hasSoftDrink) {
             const [softDrinkItem] = await db.query(
                 "SELECT price FROM menu_items WHERE name = 'Soft drink'"
             );
-            subtotal += softDrinkItem[0].price;
+            if (softDrinkItem.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Soft drink not found in menu items.'
+                });
+            }
+            subtotal += parseFloat(softDrinkItem[0].price);
         }
 
         const discountPercentage = calculateDiscountPercentage(true, hasFries, hasSoftDrink);
@@ -57,7 +72,7 @@ const createOrder = async (req, res, next) => {
             `INSERT INTO orders
             (sandwich_id, has_fries, has_soft_drink, subtotal, discount_percentage, discount_amount, total)
             VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [sandwichId, hasFries, hasSoftDrink, subtotal, discountPercentage * 100, discountAmount, total]
+            [sandwich_id, hasFries, hasSoftDrink, subtotal, discountPercentage * 100, discountAmount, total]
         );
 
         const [newOrder] = await db.query(
@@ -102,7 +117,7 @@ const getAllOrders = async (req, res, next) => {
 const updateOrder = async (req, res, next) => {
     try {
         const { id } = req.params;
-        const { sandwichId, extras } = req.body;
+        const { sandwich_id, extras } = req.body;
 
         const [existingOrders] = await db.query(
             'SELECT * FROM orders WHERE id = ?',
@@ -116,7 +131,7 @@ const updateOrder = async (req, res, next) => {
             });
         }
 
-        if (!sandwichId) {
+        if (!sandwich_id) {
             return res.status(400).json({
                 success: false,
                 error: 'A sandwich must be selected.'
@@ -125,7 +140,7 @@ const updateOrder = async (req, res, next) => {
 
         const [sandwiches] = await db.query(
             'SELECT * FROM menu_items WHERE id = ? AND type = "sandwich"',
-            [sandwichId]
+            [sandwich_id]
         );
 
         if (sandwiches.length === 0) {
@@ -145,20 +160,32 @@ const updateOrder = async (req, res, next) => {
             });
         }
 
-        let subtotal = sandwiches[0].price;
+        let subtotal = parseFloat(sandwiches[0].price);
 
         if (hasFries) {
             const [friestItem] = await db.query(
                 "SELECT price FROM menu_items WHERE name = 'Fries'"
             );
-            subtotal += friestItem[0].price;
+            if (friestItem.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Fries not found in menu items.'
+                });
+            }
+            subtotal += parseFloat(friestItem[0].price);
         }
 
         if (hasSoftDrink) {
             const [softDrinkItem] = await db.query(
                 "SELECT price FROM menu_items WHERE name = 'Soft drink'"
             );
-            subtotal += softDrinkItem[0].price;
+            if (softDrinkItem.length === 0) {
+                return res.status(404).json({
+                    success: false,
+                    error: 'Soft drink not found in menu items.'
+                });
+            }
+            subtotal += parseFloat(softDrinkItem[0].price);
         }
 
         const discountPercentage = calculateDiscountPercentage(true, hasFries, hasSoftDrink);
@@ -168,7 +195,7 @@ const updateOrder = async (req, res, next) => {
             `UPDATE orders 
             SET sandwich_id = ?, has_fries = ?, has_soft_drink = ?, subtotal = ?, discount_percentage = ?, discount_amount = ?, total = ?
             WHERE id = ?`,
-            [sandwichId, hasFries, hasSoftDrink, subtotal, discountPercentage * 100, discountAmount, total, id]
+            [sandwich_id, hasFries, hasSoftDrink, subtotal, discountPercentage * 100, discountAmount, total, id]
         );
 
         const [updatedOrder] = await db.query(
