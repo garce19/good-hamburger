@@ -1,11 +1,26 @@
 const db = require('../config/database');
 const { calculateDiscountPercentage, calculateTotal } = require('../services/discountService');
 
+/**
+ * Creates a new order with automatic discount calculation.
+ *
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.sandwich_id - ID of the selected sandwich (required)
+ * @param {string[]} req.body.extras - Array of extra items: 'fries', 'soft_drink' (optional)
+ *
+ * @returns {Object} 201 - Order created successfully with breakdown
+ * @returns {Object} 400 - Validation error (missing sandwich or duplicate extras)
+ * @returns {Object} 404 - Sandwich or extra items not found in menu
+ * @returns {Object} 500 - Internal server error
+ *
+ * Discount rules:
+ * - Sandwich + Fries + Soft Drink: 20% discount
+ * - Sandwich + Soft Drink: 15% discount
+ * - Sandwich + Fries: 10% discount
+ * - Sandwich only: 0% discount
+ */
 const createOrder = async (req, res, next) => {
     try {
-        console.log('Request Body:', req.body);
-        console.log('Sandwich ID:', req.body.sandwich_id);
-        console.log('Extras:', req.body.extras);
         const { sandwich_id, extras } = req.body;
 
         if (!sandwich_id) {
@@ -97,6 +112,15 @@ const createOrder = async (req, res, next) => {
     }
 };
 
+/**
+ * Retrieves all orders from the database.
+ *
+ * Orders are returned in descending order by creation date (most recent first).
+ * Includes sandwich name through JOIN with menu_items table.
+ *
+ * @returns {Object} 200 - Array of all orders with sandwich details
+ * @returns {Object} 500 - Internal server error
+ */
 const getAllOrders = async (req, res, next) => {
     try {
         const [rows] = await db.query(
@@ -114,6 +138,22 @@ const getAllOrders = async (req, res, next) => {
     }
 };
 
+/**
+ * Updates an existing order with new sandwich and/or extras.
+ *
+ * Recalculates subtotal, discount, and total based on new items.
+ * Follows the same discount rules as order creation.
+ *
+ * @param {number} req.params.id - Order ID to update
+ * @param {Object} req.body - Request body
+ * @param {number} req.body.sandwich_id - ID of the selected sandwich (required)
+ * @param {string[]} req.body.extras - Array of extra items: 'fries', 'soft_drink' (optional)
+ *
+ * @returns {Object} 200 - Order updated successfully
+ * @returns {Object} 400 - Validation error (missing sandwich or duplicate extras)
+ * @returns {Object} 404 - Order, sandwich, or extra items not found
+ * @returns {Object} 500 - Internal server error
+ */
 const updateOrder = async (req, res, next) => {
     try {
         const { id } = req.params;
@@ -212,6 +252,15 @@ const updateOrder = async (req, res, next) => {
     }
 };
 
+/**
+ * Deletes an order from the database.
+ *
+ * @param {number} req.params.id - Order ID to delete
+ *
+ * @returns {Object} 200 - Order deleted successfully
+ * @returns {Object} 404 - Order not found
+ * @returns {Object} 500 - Internal server error
+ */
 const deleteOrder = async (req, res, next) => {
     try {
         const { id } = req.params;
